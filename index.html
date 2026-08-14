@@ -378,6 +378,9 @@ function openC(i){cCur=i;const s=camp[i];
     renderCmCause(s);
     multiChips('cmActions',ACTIONS,s.actions,v=>{const idx=s.actions.indexOf(v);if(idx>=0)s.actions.splice(idx,1);else s.actions.push(v);openC(i);});
     chips('cmStatus',STATUSES,s.status,v=>{s.status=v;openC(i);});
+    chips('cmMethod',METHODS,s.method,v=>{s.method=(s.method===v?'':v);openC(i);});
+    chips('cmHandler',HANDLERS,s.handler,v=>{s.handler=(s.handler===v?'':v);openC(i);});
+    document.getElementById('cmDate').value=s.adate||'';
     document.getElementById('cmMemo').value=s.memo||'';
     renderCmGuide(s);
   }
