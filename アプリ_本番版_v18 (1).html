@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>店舗フォロー管理 ｜ N.THREE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F4EF;--panel:#FFFFFF;--ink:#2C2A26;--ink-soft:#6B6660;--line:#E4DFD6;
+--teal:#3F6E70;--teal-deep:#2C4F51;--teal-tint:#E3EEEC;--amber:#C08A3E;--amber-tint:#F6ECDA;
+--gray:#9A948B;--gray-tint:#EFEBE3;--danger:#B5573F;--shadow:0 1px 2px rgba(44,42,38,0.04),0 4px 16px rgba(44,42,38,0.05);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic New',sans-serif;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:720px;margin:0 auto;padding:26px 18px 80px;}
+.preview-flag{background:var(--amber-tint);border:1px solid #E7D3A8;color:#8A6221;font-size:12px;padding:9px 13px;border-radius:8px;margin-bottom:18px;line-height:1.6;}
+.title{font-family:'Shippori Mincho',serif;font-weight:700;font-size:23px;margin:0;}
+.subtitle{color:var(--ink-soft);font-size:12.5px;margin:5px 0 0;}
+.tabs{display:flex;gap:8px;margin:18px 0 18px;overflow-x:auto;padding-bottom:2px;}
+.tab{background:#fff;border:1.5px solid var(--line);border-radius:22px;padding:9px 18px;font-family:inherit;font-size:13.5px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;transition:all .15s;box-shadow:var(--shadow);}
+.tab:hover{border-color:var(--teal);color:var(--teal-deep);}
+.tab.active{background:var(--teal-deep);border-color:var(--teal-deep);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(63,110,112,0.28);}
+.regbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.regbtn{font-size:12.5px;padding:6px 13px;border:1px solid var(--line);border-radius:20px;background:#fff;cursor:pointer;color:var(--ink-soft);}
+.regbtn.active{background:var(--teal-deep);border-color:var(--teal-deep);color:#fff;font-weight:600;}
+.filterbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.fbtn{font-size:12.5px;padding:7px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;color:var(--ink-soft);}
+.fbtn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600;}
+.searchbox{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:inherit;font-size:14px;margin-bottom:12px;background:#fff;}
+.summary{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 16px;margin-bottom:14px;display:flex;gap:18px;flex-wrap:wrap;}
+.summary .item{font-size:12px;color:var(--ink-soft);}
+.summary .item b{font-family:'Shippori Mincho',serif;font-size:18px;color:var(--teal-deep);margin-right:3px;}
+.progress-total{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px;margin-bottom:14px;}
+.progress-total .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.progress-total .lab{font-size:12.5px;color:var(--ink-soft);}
+.progress-total .big{font-family:'Shippori Mincho',serif;font-size:20px;font-weight:700;color:var(--teal-deep);}
+.pbar{background:#F1EDE6;border-radius:6px;height:12px;overflow:hidden;}
+.pbar>div{height:100%;background:var(--teal);}
+.list-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.list-head{font-size:12.5px;color:var(--ink-soft);padding:12px 16px;border-bottom:1px solid var(--line);background:#FBF9F5;}
+.list-head b{color:var(--teal-deep);font-weight:700;}
+.list-head.sortable{cursor:pointer;user-select:none;}
+.list-head.sortable:hover{background:#F3EFE8;}
+.sortlink{color:var(--teal-deep);font-weight:600;}
+.row{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;}
+.row:last-child{border-bottom:none;}
+.row:active,.row:hover{background:#FBF9F5;}
+.row .name{font-weight:700;font-size:14.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.row .pri{font-size:10px;font-weight:700;color:#fff;background:var(--danger);border-radius:4px;padding:1px 5px;margin-right:6px;}
+.row .rate{font-family:'Shippori Mincho',serif;font-weight:700;font-size:14.5px;color:var(--teal-deep);white-space:nowrap;}
+.row .rate.low{color:var(--danger);}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.b-pending{background:var(--gray-tint);color:var(--ink-soft);}
+.b-progress{background:var(--amber-tint);color:#8A6221;}
+.b-done{background:var(--teal-tint);color:var(--teal-deep);}
+.b-achieved{background:var(--teal);color:#fff;}
+.chev{color:var(--gray);font-size:18px;}
+.prog{width:60px;height:8px;background:#F1EDE6;border-radius:5px;overflow:hidden;flex-shrink:0;}
+.prog>div{height:100%;background:var(--teal);}
+.prog.zero>div{background:var(--gray);}
+.prog.done>div{background:var(--teal-deep);}
+.goal{font-size:12px;color:var(--ink-soft);white-space:nowrap;min-width:52px;text-align:right;}
+.goal b{color:var(--teal-deep);font-family:'Shippori Mincho',serif;font-size:14px;}
+.empty-msg{padding:30px 16px;text-align:center;color:var(--gray);font-size:13px;}
+.foot-note{font-size:11.5px;color:var(--ink-soft);margin-top:14px;line-height:1.6;}
+.import-note{background:#FBF9F5;border:1px dashed var(--line);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6;}
+.reset-area{margin-top:30px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#FBF9F5;}
+.reset-title{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;}
+.reset-note{font-size:11px;color:var(--gray);margin-bottom:10px;line-height:1.6;}
+.reset-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.reset-btn{font-family:inherit;font-size:12.5px;border:1px solid #D9B8AE;background:#fff;color:var(--danger);border-radius:8px;padding:9px 14px;cursor:pointer;}
+.reset-btn:hover{background:#FBEEE9;}
+.reset-status{font-size:12px;color:var(--teal-deep);margin-top:8px;}
+.import-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.file-btn{font-family:inherit;font-size:13px;border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--teal-deep);background:var(--teal-deep);color:#fff;font-weight:600;}
+.import-status{font-size:12px;color:var(--ink-soft);}
+.overlay{position:fixed;inset:0;background:rgba(44,42,38,.4);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;z-index:50;overflow-y:auto;}
+.overlay.open{display:flex;}
+.modal{background:var(--panel);border-radius:16px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(44,42,38,.25);}
+.modal-head{padding:20px 20px 14px;border-bottom:1px solid var(--line);}
+.modal-title{font-family:'Shippori Mincho',serif;font-size:19px;font-weight:700;margin:0;}
+.modal-sub{font-size:12px;color:var(--ink-soft);margin:6px 0 0;line-height:1.6;}
+.modal-body{padding:18px 20px;}
+.section-label{font-size:11.5px;font-weight:700;color:var(--teal-deep);margin:18px 0 8px;}
+.section-label:first-child{margin-top:0;}
+.goalbig{display:flex;gap:10px;margin-bottom:6px;}
+.gbox{flex:1;background:#FBF9F5;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
+.gbox .lab{font-size:10.5px;color:var(--ink-soft);}
+.gbox .val{font-family:'Shippori Mincho',serif;font-weight:700;font-size:20px;color:var(--teal-deep);margin-top:2px;}
+.gbox .val.pend{color:var(--gray);font-size:14px;font-weight:500;}
+.field{margin-bottom:13px;}
+.field>label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;}
+.opts{display:flex;flex-wrap:wrap;gap:7px;}
+.opt{font-size:13px;padding:9px 13px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;color:var(--ink);}
+.opt.sel{background:var(--teal-tint);border-color:var(--teal);color:var(--teal-deep);font-weight:600;}
+.opt.dis{opacity:.4;cursor:not-allowed;}
+.opt .ck{color:var(--teal);font-weight:700;margin-right:4px;}
+input[type=text],textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff;}
+textarea{min-height:52px;resize:vertical;}
+.hint{font-size:11px;color:var(--gray);margin-top:4px;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
+.btn{font-family:inherit;font-size:14px;border-radius:10px;padding:12px 18px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);}
+.btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600;}
+.guide{background:var(--teal-tint);border:1px solid #CADDDA;border-radius:10px;padding:12px 14px;margin-top:8px;font-size:12.5px;line-height:1.7;color:var(--teal-deep);}
+.guide.empty{background:#FBF9F5;border-color:var(--line);color:var(--ink-soft);}
+.analysis-card,.appr-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:14px;}
+.analysis-card h2{font-family:'Shippori Mincho',serif;font-size:16px;margin:0 0 4px;}
+.analysis-card .sub{font-size:12px;color:var(--ink-soft);margin:0 0 14px;}
+.appr-card h3{font-family:'Shippori Mincho',serif;font-size:15.5px;margin:0 0 4px;color:var(--teal-deep);}
+.appr-tag{display:inline-block;font-size:11px;background:var(--amber-tint);color:#8A6221;border-radius:6px;padding:2px 8px;margin-bottom:8px;}
+.appr-card ul{margin:6px 0 0;padding-left:17px;}.appr-card li{font-size:13px;line-height:1.8;}
+.appr-quote{background:#FBF9F5;border-left:3px solid var(--teal);padding:8px 12px;border-radius:0 8px 8px 0;font-size:12.5px;margin:8px 0 0;}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="preview-flag" id="statusFlag"><b>読み込み中…</b> データベースに接続しています。</div>
+  <h1 class="title">店舗フォロー管理</h1>
+  <p class="subtitle">N.THREE</p>
+  <div class="tabs">
+    <button class="tab active" data-view="prog">進捗</button>
+    <button class="tab" data-view="follow">フォロー</button>
+    <button class="tab" data-view="analysis">分析</button>
+    <button class="tab" data-view="approach">声掛けアプローチ</button>
+  </div>
+
+  <!-- 進捗タブ：全150店を眺める -->
+  <div id="viewProg">
+    <div class="import-note">セット販売キャンペーン（8/15〜9/19）。実績は販売データCSV（「【キャンペーン】セット」列）を取り込むと自動で入ります。ここは全店の進捗を見る画面です。</div>
+    <div class="import-row">
+      <label class="file-btn">販売データCSVを取り込む<input type="file" id="csvInput" accept=".csv" style="display:none"></label>
+      <span class="import-status" id="importStatus">まだ取り込んでいません（実績0）</span>
+    </div>
+    <div class="progress-total" id="progTotal"></div>
+    <div class="regbar" id="pRegbar"></div>
+    <input type="text" class="searchbox" id="pSearch" placeholder="店舗名で検索">
+    <div class="list-card">
+      <div class="list-head sortable" id="pHead" onclick="pSort=nextSort(pSort);renderProg();">全 0 店 ／ 店番号順 ⇅</div>
+      <div id="pRows"></div>
+    </div>
+    <p class="foot-note">全店の進捗を確認する画面です。フォロー作業は「フォロー」タブで行います。</p>
+    <div class="reset-area">
+      <div class="reset-title">データのリセット（管理用）</div>
+      <div class="reset-note">テストや、次のキャンペーンを始めるときに使います。押すと確認が出ます。</div>
+      <div class="reset-btns">
+        <button class="reset-btn" onclick="resetSold()">実績をリセット（販売数を0に）</button>
+        <button class="reset-btn" onclick="resetFollow()">フォロー入力をリセット（原因・対応・状況・メモを空に）</button>
+      </div>
+      <div class="reset-status" id="resetStatus"></div>
+    </div>
+  </div>
+
+  <!-- フォロータブ：未達の店だけ -->
+  <div id="viewFollow" style="display:none;">
+    <div class="import-note">目標に届いていない店舗（フォロー対象）だけを表示しています。実績が目標に届くと、自動でこのリストから外れます。</div>
+    <div class="progress-total" id="followTotal"></div>
+    <div class="regbar" id="fRegbar"></div>
+    <input type="text" class="searchbox" id="fSearch" placeholder="店舗名で検索">
+    <div class="list-card">
+      <div class="list-head sortable" id="fHead" onclick="fSort=nextSort(fSort);renderFollow();">フォロー対象 0 店 ／ 店番号順 ⇅</div>
+      <div id="fRows"></div>
+    </div>
+    <p class="foot-note">店舗をタップして、フォロー内容を記録できます。</p>
+  </div>
+
+  <div id="viewAnalysis" style="display:none;">
+    <div class="analysis-card"><h2>キャンペーン達成状況</h2><p class="sub">150店の目標に対する達成の分布</p><div id="campBars"></div></div>
+    <div class="analysis-card"><h2>原因の内訳（原因究明）</h2><p class="sub">複数選択のため合計は店舗数と一致しません</p><div id="causeBars"></div></div>
+  </div>
+
+  <div id="viewApproach" style="display:none;">
+    <p class="foot-note" style="margin:0 0 12px;">原因タイプ別の声掛けアプローチ。<b>（文言はたたき台です）</b></p>
+    <div id="approachCards"></div>
+  </div>
+</div>
+
+<div class="overlay" id="cOverlay"><div class="modal">
+  <div class="modal-head"><h3 class="modal-title" id="cmTitle"></h3><p class="modal-sub" id="cmSub"></p></div>
+  <div class="modal-body">
+    <div class="section-label">目標と実績</div>
+    <div class="goalbig">
+      <div class="gbox"><div class="lab">目標</div><div class="val" id="cmTarget">-</div></div>
+      <div class="gbox"><div class="lab">実績</div><div class="val" id="cmSold">0</div></div>
+      <div class="gbox"><div class="lab">達成率</div><div class="val" id="cmRate">0%</div></div>
+    </div>
+    <div id="cmFollowArea">
+      <div class="section-label">なぜ届いていないか（原因・複数選択できます）</div>
+      <div class="field"><div class="opts" id="cmCause"></div>
+        <div class="hint">「声掛けしていない」と「声掛けても売れない」はどちらか一方のみ。それ以外は組み合わせOK。</div></div>
+      <div class="section-label">フォロー内容（複数選択できます）</div>
+      <div class="field"><div class="opts" id="cmActions"></div></div>
+      <div id="cmGuide" class="guide empty">原因を選ぶと声掛けアプローチが表示されます。</div>
+      <div class="section-label" style="margin-top:16px;">フォロー状況</div>
+      <div class="field"><div class="opts" id="cmStatus"></div></div>
+      <div class="field"><label>メモ</label><textarea id="cmMemo"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="btn" onclick="closeC()">閉じる</button><button class="btn btn-primary" onclick="saveC()">保存（プレビュー）</button></div>
+</div></div>
+
+<script>
+const CAMP=[{"name": "001 和歌山駅前", "staff": 8, "target": 13, "region": "関西", "sold": 0}, {"name": "002 岸和田", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "003 堺三国ヶ丘", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "004 神戸三宮", "staff": 8, "target": 13, "region": "関西", "sold": 0}, {"name": "005 大阪梅田", "staff": 10, "target": 16, "region": "関西", "sold": 0}, {"name": "006 天王寺", "staff": 6, "target": 10, "region": "関西", "sold": 0}, {"name": "007 上本町", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "008 京橋", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "009 千里中央", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "010 京都四条河原町", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "011 高槻駅前", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "012 近鉄奈良", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "013 橿原八木", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "014 豊中駅前", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "015 阪急茨木", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "016 西宮北口", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "017 尼崎駅前", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "018 江坂", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "019 阪急塚口", "staff": 6, "target": 10, "region": "関西", "sold": 0}, {"name": "020 京都駅前", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "021 守口市駅", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "022 和泉府中", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "023 伏見桃山", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "024 山科駅前", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "025 阪急宝塚", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "026 イオン吉川美南", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "027 枚方市駅前", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "028 新宿西口", "staff": 8, "target": 13, "region": "関東", "sold": 0}, {"name": "029 近鉄八尾", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "030 なんば", "staff": 6, "target": 10, "region": "関西", "sold": 0}, {"name": "031 銀座ファイブ", "staff": 9, "target": 15, "region": "関東", "sold": 0}, {"name": "032 池袋東口", "staff": 7, "target": 12, "region": "関東", "sold": 0}, {"name": "033 横浜", "staff": 7, "target": 12, "region": "関東", "sold": 0}, {"name": "034 千葉駅前", "staff": 9, "target": 15, "region": "関東", "sold": 0}, {"name": "035 川崎駅前", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "036 名古屋栄", "staff": 6, "target": 10, "region": "東海", "sold": 0}, {"name": "037 大宮東口", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "038 そよら湘南茅ヶ崎", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "039 渋谷宮益坂", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "040 町田駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "041 柏駅前", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "042 藤沢駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "043 オーミー大津テラス", "staff": 7, "target": 12, "region": "東海", "sold": 0}, {"name": "044 キッピーモール三田", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "045 立川南口", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "046 船橋駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "047 川口駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "048 堺鳳おおとりウイングス", "staff": 6, "target": 10, "region": "関西", "sold": 0}, {"name": "049 テラッソ姫路", "staff": 8, "target": 13, "region": "関西", "sold": 0}, {"name": "050 ニッケパークタウン加古川", "staff": 7, "target": 12, "region": "関西", "sold": 0}, {"name": "051 ラソラ川西", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "052 箕面駅前", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "053 横浜鶴見", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "054 大阪駅前第3ビル", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "055 香里園", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "056 大和西大寺", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "057 本厚木", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "058 長居", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "059 市川駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "060 名古屋金山", "staff": 8, "target": 13, "region": "東海", "sold": 0}, {"name": "061 名鉄岐阜", "staff": 5, "target": 8, "region": "東海", "sold": 0}, {"name": "062 近鉄四日市", "staff": 6, "target": 10, "region": "東海", "sold": 0}, {"name": "063 明石駅前", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "064 名古屋名駅", "staff": 11, "target": 18, "region": "東海", "sold": 0}, {"name": "065 豊田市駅前", "staff": 7, "target": 12, "region": "東海", "sold": 0}, {"name": "066 豊橋駅前", "staff": 8, "target": 13, "region": "東海", "sold": 0}, {"name": "067 阪急桂", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "068 一宮駅前", "staff": 8, "target": 13, "region": "東海", "sold": 0}, {"name": "069 中野南口", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "070 垂水駅前", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "071 板宿", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "072 八王子オーパ", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "073 戸塚駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "074 名古屋今池", "staff": 6, "target": 10, "region": "東海", "sold": 0}, {"name": "075 アクアウォーク大垣", "staff": 7, "target": 12, "region": "東海", "sold": 0}, {"name": "076 藤が丘", "staff": 8, "target": 13, "region": "東海", "sold": 0}, {"name": "077 近鉄ぷらっと布施", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "078 アクロスモール泉北原山台", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "079 トナリエつくばスクエア", "staff": 10, "target": 16, "region": "関東", "sold": 0}, {"name": "080 大和郡山", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "081 アルザタウン泉大津", "staff": 4, "target": 7, "region": "東海", "sold": 0}, {"name": "082 松戸駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "083 ミウィ橋本", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "084 草津エイスクエア", "staff": 6, "target": 10, "region": "東海", "sold": 0}, {"name": "085 トコトコスクエア所沢", "staff": 7, "target": 12, "region": "関東", "sold": 0}, {"name": "086 イオンモール八千代緑が丘", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "087 アドバンス寝屋川", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "088 調布とうきゅう", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "089 阪急伊丹", "staff": 2, "target": 3, "region": "関西", "sold": 0}, {"name": "090 東岡崎", "staff": 7, "target": 12, "region": "東海", "sold": 0}, {"name": "091 洛北阪急スクエア", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "092 浦和西口", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "093 アスト津", "staff": 7, "target": 12, "region": "東海", "sold": 0}, {"name": "094 川越西口", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "095 トナリエ宇都宮", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "096 和歌山延時", "staff": 2, "target": 3, "region": "関西", "sold": 0}, {"name": "097 横須賀中央", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "098 大和駅前", "staff": 3, "target": 5, "region": "関東", "sold": 0}, {"name": "099 北千住", "staff": 7, "target": 12, "region": "関東", "sold": 0}, {"name": "100 新宿南口", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "101 葛西駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "102 泉南", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "103 渋谷道玄坂", "staff": 8, "target": 13, "region": "関東", "sold": 0}, {"name": "104 横浜西口", "staff": 9, "target": 15, "region": "関東", "sold": 0}, {"name": "105 稲毛駅前", "staff": 3, "target": 5, "region": "関東", "sold": 0}, {"name": "106 荻窪北口", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "107 河内長野ノバティながの", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "108 勝川", "staff": 6, "target": 10, "region": "東海", "sold": 0}, {"name": "109 南越谷", "staff": 6, "target": 10, "region": "関東", "sold": 0}, {"name": "110 西友福生", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "111 アクロスモール新鎌ヶ谷", "staff": 7, "target": 12, "region": "関東", "sold": 0}, {"name": "112 河内松原", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "113 錦糸町駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "114 蒲田駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "115 京阪百貨店住道", "staff": 5, "target": 8, "region": "関西", "sold": 0}, {"name": "116 草加駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "117 上野御徒町", "staff": 7, "target": 12, "region": "関東", "sold": 0}, {"name": "118 吉祥寺駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "119 泉北パンジョ泉ケ丘", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "120 トナリエふじみ野", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "121 練馬駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "122 京王堀之内駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "123 大船駅前", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "124 相模大野ジョイモアーズ", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "125 河内国分", "staff": 2, "target": 3, "region": "関西", "sold": 0}, {"name": "126 長岡天神駅前", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "127 芦屋駅前", "staff": 3, "target": 5, "region": "関西", "sold": 0}, {"name": "128 まるひろ上尾", "staff": 5, "target": 8, "region": "関東", "sold": 0}, {"name": "129 浅草ROX", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "130 五反田駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "131 津田沼駅前", "staff": 4, "target": 7, "region": "東海", "sold": 0}, {"name": "132 博多駅前", "staff": 10, "target": 16, "region": "九州", "sold": 0}, {"name": "133 香椎駅前", "staff": 5, "target": 8, "region": "九州", "sold": 0}, {"name": "134 成増駅前", "staff": 3, "target": 5, "region": "関東", "sold": 0}, {"name": "135 取手駅前", "staff": 2, "target": 3, "region": "関東", "sold": 0}, {"name": "136 春日部駅前", "staff": 4, "target": 7, "region": "関東", "sold": 0}, {"name": "137 ドン・キホーテ二俣川", "staff": 3, "target": 5, "region": "関東", "sold": 0}, {"name": "138 MEGAドン・キホーテ鈴鹿", "staff": 5, "target": 8, "region": "東海", "sold": 0}, {"name": "139 六甲道駅前", "staff": 2, "target": 3, "region": "関西", "sold": 0}, {"name": "140 大橋駅前", "staff": 5, "target": 8, "region": "九州", "sold": 0}, {"name": "141 佐賀駅前", "staff": 4, "target": 7, "region": "九州", "sold": 0}, {"name": "142 小倉駅前", "staff": 6, "target": 10, "region": "九州", "sold": 0}, {"name": "143 西鉄久留米駅前", "staff": 3, "target": 5, "region": "九州", "sold": 0}, {"name": "144 星ヶ丘駅前", "staff": 4, "target": 7, "region": "東海", "sold": 0}, {"name": "145 六本松駅前", "staff": 5, "target": 8, "region": "九州", "sold": 0}, {"name": "146 ドン・キホーテラパーク瑞江", "staff": 2, "target": 3, "region": "関東", "sold": 0}, {"name": "147 MEGAドン・キホーテ桃花台", "staff": 4, "target": 7, "region": "東海", "sold": 0}, {"name": "148 エビスタ西宮", "staff": 4, "target": 7, "region": "関西", "sold": 0}, {"name": "149 イオン二日市", "staff": 3, "target": 5, "region": "九州", "sold": 0}, {"name": "150 サニーサイドモール小倉", "staff": 5, "target": 8, "region": "九州", "sold": 0}];
+const REGIONS=["すべて","関東","関西","東海","九州"];
+const STATUSES=[["pending","未着手"],["progress","フォロー中"],["done","完了"]];
+const ACTIONS=["トーク例共有","訴求ポイントを共有","POPの設置状況を確認","お声がけの有無を確認","お声がけのタイミングを提案"];
+const CAUSES=[{v:"声掛けしていない",grp:"k"},{v:"声掛けても売れない",grp:"k"},{v:"商品理解が薄い"},{v:"ネイリストが商品を使ったことがない"},{v:"陳列・POPが目立たない"},{v:"その他"}];
+const APPROACH={
+ "声掛けしていない":{tag:"まず声をかける",lead:"忙しくても言える短い一言から。まずキャンペーンを知ってもらう。",points:["セット価格とひんやり感で興味を引く","会計・仕上げ時に一言添える"],quote:"「今なら化粧水と美容液のセットで2,500円です。夏は冷蔵庫で冷やして使われる方も多く、ひんやりした使用感が好評ですよ。」／（一押し）「このセット価格はキャンペーン期間限定の価格なので、よろしければこの機会にぜひお試しください。」"},
+ "声掛けても売れない":{tag:"買う理由を後押し",lead:"お得さと、重ねて使う価値で背中を押す。",points:["通常3,300円→2,500円のお得を具体的に","すでに片方を持つ人には、もう片方を提案"],quote:"（お得）「化粧水と美容液をセットでご購入いただくと、通常合計3,300円のところ2,500円になるので、800円お得になるんです。」／（片方所持）「それでしたら、お持ちでない方も試してみませんか？重ねて使うとよりうるおいを感じやすくなるので、今お使いのものともきっと相性がいいですよ。」"},
+ "商品理解が薄い":{tag:"商品と使い方を伝える",lead:"スタッフが商品と使い方を語れる状態に。",points:["化粧水→美容液の順、セットがお得","化粧水は低刺激、美容液は軽い付け心地"],quote:"（使い方）「最初に化粧水でお肌を整えてから美容液を重ねるのがおすすめです。セットだと2,500円でお得なので、よろしければ一緒にいかがですか。」／（魅力）「化粧水は低刺激でべたつかないのにしっかり潤い、美容液は軽い付け心地なのにうるおいがしっかり肌にとどまります。重ねて使うと、よりうるおいを感じていただけますよ。」"},
+ "ネイリストが商品を使ったことがない":{tag:"まず使って実感してもらう",lead:"自分が良いと思えたものは勧めやすい。夏の肌悩みと絡めて。",points:["スタッフが試して使用感を知る","夏の乾燥ケアとして実感ベースで語れるように"],quote:"（夏の肌悩み）「紫外線や冷房で、夏の肌は思っている以上に乾燥しています。化粧水で水分を補って美容液でうるおいを閉じ込める2ステップが、この時期はとくにおすすめです。」"},
+ "陳列・POPが目立たない":{tag:"見せ方を整える",lead:"期間限定価格が目に入るように。気づかれれば選ばれる。",points:["セット2,500円（800円お得）のPOPを目立つ場所に","お客様の動線から見えるか確認"],quote:"（POP文言例）「化粧水＋美容液セット 通常3,300円 → 2,500円　期間限定800円お得」"},
+ "その他":{tag:"個別に確認",lead:"当てはまらない場合。店舗ごとの事情を確認して個別対応。",points:["メモに具体的な状況を記録し、打ち手を検討"],quote:""}
+};
+const SUPABASE_URL='https://rhpjjntxgbemqrdbdmyy.supabase.co';
+const SUPABASE_KEY='sb_publishable_eQMbb2aoA-57MDOhAktEtQ_l-KiT3rf';
+const TABLE='campaign_tracker';
+const SEED=JSON.parse(JSON.stringify(CAMP)); // 埋め込み150店（初回投入用）
+let camp=[]; // DBから読み込む
+let saveTimer=null;
+function sbHeaders(extra){return Object.assign({'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},extra||{});}
+function storeNo(name){const m=String(name).match(/(\d+)/);return m?m[1]:'';}
+// DBの行 → アプリ内オブジェクト
+function rowToStore(r){return {dbid:r.id,name:r.name||'',staff:r.staff||0,target:r.target||0,sold:r.sold||0,region:r.region||'',
+  causes:r.cause?String(r.cause).split('|').filter(Boolean):[],actions:r.action?String(r.action).split('|').filter(Boolean):[],
+  status:r.status||'pending',memo:r.memo||''};}
+async function loadFromDB(){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=*&order=store_no.asc',{headers:sbHeaders()});
+  if(!res.ok)throw new Error('load failed '+res.status);
+  return await res.json();
+}
+async function seedIfEmpty(){
+  const rows=await loadFromDB();
+  if(rows.length>0)return rows; // すでにデータあり
+  // 空 → 150店を初回投入
+  const payload=SEED.map(s=>({store_no:storeNo(s.name),name:s.name,staff:s.staff,target:s.target,sold:0,region:s.region,cause:'',action:'',status:'pending',memo:''}));
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE,{method:'POST',headers:sbHeaders({'Prefer':'return=representation'}),body:JSON.stringify(payload)});
+  if(!res.ok)throw new Error('seed failed '+res.status);
+  return await loadFromDB();
+}
+// 1店の変更をDBに保存
+async function saveStore(s){
+  const body={sold:s.sold,cause:s.causes.join('|'),action:s.actions.join('|'),status:s.status,memo:s.memo,updated:new Date().toISOString()};
+  await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?id=eq.'+s.dbid,{method:'PATCH',headers:sbHeaders(),body:JSON.stringify(body)});
+}
+// 全店の指定フィールドをDBで一括更新
+async function bulkUpdate(body){
+  // dbidを持つ全行を対象（store_no is not nullで全件）
+  await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?store_no=not.is.null',{method:'PATCH',headers:sbHeaders(),body:JSON.stringify(body)});
+}
+async function resetSold(){
+  if(!confirm('全店の実績（販売数）を0に戻します。よろしいですか？'))return;
+  const st=document.getElementById('resetStatus');st.textContent='リセット中…';
+  try{
+    await bulkUpdate({sold:0,updated:new Date().toISOString()});
+    camp.forEach(s=>s.sold=0);
+    renderCamp();renderAnalysis();
+    document.getElementById('importStatus').textContent='まだ取り込んでいません（実績0）';
+    st.textContent='実績をリセットしました。';
+  }catch(e){st.textContent='リセットに失敗しました（通信を確認してください）';}
+}
+async function resetFollow(){
+  if(!confirm('全店のフォロー入力（原因・対応・状況・メモ）を空に戻します。よろしいですか？'))return;
+  const st=document.getElementById('resetStatus');st.textContent='リセット中…';
+  try{
+    await bulkUpdate({cause:'',action:'',status:'pending',memo:'',updated:new Date().toISOString()});
+    camp.forEach(s=>{s.causes=[];s.actions=[];s.status='pending';s.memo='';});
+    renderCamp();renderFollow();renderAnalysis();
+    st.textContent='フォロー入力をリセットしました。';
+  }catch(e){st.textContent='リセットに失敗しました（通信を確認してください）';}
+}
+
+let pRegion="すべて",pSearch="",fRegion="すべて",fSearch="",pSort="num",fSort="num",cCur=null,tCur=null,imported=false;
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function bmeta(st){return {pending:['b-pending','未着手'],progress:['b-progress','フォロー中'],done:['b-done','完了']}[st]||['b-pending','未着手'];}
+function achieved(s){return s.target?Math.round(s.sold/s.target*100):0;}
+function isDone(s){return s.target>0&&s.sold>=s.target;}
+function regbar(id,list,active,cb){
+  document.getElementById(id).innerHTML=REGIONS.map(r=>{
+    const n=r==="すべて"?list.length:list.filter(s=>s.region===r).length;
+    return `<button class="regbtn ${active===r?'active':''}" data-r="${r}">${r} (${n})</button>`;}).join('');
+  document.getElementById(id).querySelectorAll('.regbtn').forEach(b=>b.onclick=()=>cb(b.dataset.r));
+}
+/* ---- campaign: 進捗 & フォロー ---- */
+const SORT_ORDER=["num","rateAsc","rateDesc"];
+const SORT_LABEL={rateAsc:"達成率の低い順",rateDesc:"達成率の高い順",num:"店番号順"};
+function storeNum(s){const m=String(s.name).match(/(\d+)/);return m?parseInt(m[1],10):9999;}
+function applySort(list,mode){
+  const l=list.slice();
+  if(mode==="rateAsc")l.sort((a,b)=>achieved(a)-achieved(b)||storeNum(a)-storeNum(b));
+  else if(mode==="rateDesc")l.sort((a,b)=>achieved(b)-achieved(a)||storeNum(a)-storeNum(b));
+  else l.sort((a,b)=>storeNum(a)-storeNum(b));
+  return l;
+}
+function nextSort(mode){return SORT_ORDER[(SORT_ORDER.indexOf(mode)+1)%SORT_ORDER.length];}
+
+function rowHTML(s){
+  const i=camp.indexOf(s);const m=bmeta(s.status);const pct=achieved(s);const done=isDone(s);
+  return `<div class="row" onclick="openCmode(${i})">
+    <span class="name">${esc(s.name)}</span>
+    <span class="goal"><b>${s.sold}</b>/${s.target}</span>
+    <span class="prog ${s.sold===0?'zero':''} ${done?'done':''}"><div style="width:${Math.min(100,pct)}%"></div></span>
+    ${done?'<span class="badge b-achieved">達成</span>':`<span class="badge ${m[0]}">${m[1]}</span>`}
+    <span class="chev">›</span></div>`;
+}
+function totalHTML(list,regionLabel){
+  const totT=list.reduce((a,s)=>a+s.target,0),totS=list.reduce((a,s)=>a+s.sold,0);
+  const doneN=list.filter(s=>isDone(s)).length;const pct=totT?Math.round(totS/totT*100):0;
+  return `<div class="top"><span class="lab">達成状況（${regionLabel}）</span><span class="big">${doneN} / ${list.length}店 達成</span></div>
+     <div class="pbar"><div style="width:${Math.min(100,pct)}%"></div></div>
+     <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">実績 ${totS} 件 ／ 目標 ${totT} 件（${pct}%）</div>`;
+}
+/* 進捗タブ：全店 */
+function renderProg(){
+  let base=pRegion==="すべて"?camp:camp.filter(s=>s.region===pRegion);
+  document.getElementById('progTotal').innerHTML=totalHTML(base,pRegion);
+  let l=base.slice();
+  if(pSearch)l=l.filter(s=>s.name.includes(pSearch));
+  l=applySort(l,pSort);
+  document.getElementById('pHead').innerHTML=`全 <b>${l.length}</b> 店 ／ <span class="sortlink">${SORT_LABEL[pSort]} ⇅</span>`;
+  document.getElementById('pRows').innerHTML=l.length?l.map(rowHTML).join(''):'<div class="empty-msg">該当する店舗はありません</div>';
+}
+/* フォロータブ：未達のみ */
+function renderFollow(){
+  let base=fRegion==="すべて"?camp:camp.filter(s=>s.region===fRegion);
+  const todo=base.filter(s=>!isDone(s));
+  document.getElementById('followTotal').innerHTML=totalHTML(base,fRegion);
+  let l=todo.slice();
+  if(fSearch)l=l.filter(s=>s.name.includes(fSearch));
+  l=applySort(l,fSort);
+  document.getElementById('fHead').innerHTML=`フォロー対象 <b>${l.length}</b> 店 ／ <span class="sortlink">${SORT_LABEL[fSort]} ⇅</span>`;
+  document.getElementById('fRows').innerHTML=l.length?l.map(rowHTML).join(''):'<div class="empty-msg">フォロー対象の店舗はありません（すべて達成）</div>';
+}
+function renderCamp(){renderProg();renderFollow();}
+
+function chips(id,list,val,cb){
+  document.getElementById(id).innerHTML=list.map(o=>{const label=Array.isArray(o)?o[1]:o,v=Array.isArray(o)?o[0]:o;
+    return `<span class="opt ${val===v?'sel':''}" data-v="${esc(v)}">${esc(label)}</span>`;}).join('');
+  document.getElementById(id).querySelectorAll('.opt').forEach(el=>el.onclick=()=>cb(el.dataset.v));
+}
+function multiChips(id,list,arr,cb){
+  document.getElementById(id).innerHTML=list.map(a=>{const on=arr.includes(a);
+    return `<span class="opt ${on?'sel':''}" data-v="${esc(a)}">${on?'<span class="ck">✓</span>':''}${esc(a)}</span>`;}).join('');
+  document.getElementById(id).querySelectorAll('.opt').forEach(el=>el.onclick=()=>cb(el.dataset.v));
+}
+let cModalMode='follow'; // 'prog'なら原因等を隠す
+function renderCmCause(s){
+  const box=document.getElementById('cmCause');
+  box.innerHTML=CAUSES.map(c=>{const on=s.causes.includes(c.v);let dis=false;
+    if(c.grp==="k"){const other=CAUSES.find(x=>x.grp==="k"&&x.v!==c.v).v;if(!on&&s.causes.includes(other))dis=true;}
+    return `<span class="opt ${on?'sel':''} ${dis?'dis':''}" data-v="${esc(c.v)}">${on?'<span class="ck">✓</span>':''}${esc(c.v)}</span>`;}).join('');
+  box.querySelectorAll('.opt').forEach(el=>{if(el.classList.contains('dis'))return;
+    el.onclick=()=>{const v=el.dataset.v,idx=s.causes.indexOf(v);if(idx>=0)s.causes.splice(idx,1);else s.causes.push(v);renderCmCause(s);renderCmGuide(s);};});
+}
+function renderCmGuide(s){const g=document.getElementById('cmGuide');
+  if(!s.causes.length){g.className='guide empty';g.innerHTML='原因を選ぶと声掛けアプローチが表示されます。';return;}
+  g.className='guide';g.innerHTML=s.causes.map(c=>{const a=APPROACH[c];
+    return `<b>【${esc(a.tag)}】</b>${esc(a.lead)}<br>`+a.points.map(p=>'・'+esc(p)).join('<br>')+(a.quote?`<br><span style="color:var(--ink-soft);">例）${esc(a.quote)}</span>`:'');}).join('<div style="height:8px;"></div>');
+}
+function openCmode(i){
+  const active=document.querySelector('.tab.active').dataset.view;
+  cModalMode = (active==='prog') ? 'prog' : 'follow';
+  openC(i);
+}
+function openC(i){cCur=i;const s=camp[i];
+  document.getElementById('cmTitle').textContent=s.name;
+  document.getElementById('cmSub').textContent=`${s.region}｜在籍 ${s.staff}人`;
+  document.getElementById('cmTarget').textContent=s.target+'件';
+  document.getElementById('cmSold').textContent=s.sold+'件';
+  document.getElementById('cmRate').textContent=achieved(s)+'%';
+  // 進捗モードならフォロー入力を隠す
+  document.getElementById('cmFollowArea').style.display = cModalMode==='prog' ? 'none' : 'block';
+  if(cModalMode!=='prog'){
+    renderCmCause(s);
+    multiChips('cmActions',ACTIONS,s.actions,v=>{const idx=s.actions.indexOf(v);if(idx>=0)s.actions.splice(idx,1);else s.actions.push(v);openC(i);});
+    chips('cmStatus',STATUSES,s.status,v=>{s.status=v;openC(i);});
+    document.getElementById('cmMemo').value=s.memo||'';
+    renderCmGuide(s);
+  }
+  document.getElementById('cOverlay').classList.add('open');
+}
+function closeC(){document.getElementById('cOverlay').classList.remove('open');}
+function saveC(){if(cCur!=null){camp[cCur].memo=document.getElementById('cmMemo').value;saveStore(camp[cCur]).catch(e=>console.error(e));}closeC();renderCamp();}
+/* CSV import */
+function normName(n){return String(n).replace(/\s+/g,'').replace(/^0+/,'');}
+document.getElementById('csvInput').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const text=ev.target.result;
+      const lines=text.split(/\r?\n/).filter(l=>l.trim());
+      const header=lines[0].split(',').map(h=>h.replace(/^\ufeff/,'').trim());
+      const nameIdx=header.findIndex(h=>h==='店舗');
+      const setIdx=header.findIndex(h=>h.includes('セット'));
+      if(nameIdx<0||setIdx<0){document.getElementById('importStatus').textContent='列が見つかりません（「店舗」「【キャンペーン】セット」を確認）';return;}
+      const map={};
+      for(let i=1;i<lines.length;i++){
+        const cols=lines[i].split(',');
+        if(cols[nameIdx]==='全店合計'||!cols[nameIdx])continue;
+        const key=normName(cols[nameIdx]);
+        const val=parseInt(cols[setIdx],10);
+        map[key]=isNaN(val)?0:val;
+      }
+      let hit=0;const changed=[];
+      camp.forEach(s=>{const k=normName(s.name);if(k in map){s.sold=map[k];hit++;changed.push(s);}});
+      imported=true;
+      document.getElementById('importStatus').textContent=`取り込み完了：${hit}店の実績を更新しました（保存中…）`;
+      renderCamp();renderAnalysis();
+      Promise.all(changed.map(s=>saveStore(s))).then(()=>{document.getElementById('importStatus').textContent=`取り込み完了：${hit}店の実績を保存しました`;}).catch(e=>{document.getElementById('importStatus').textContent='保存に失敗しました（通信を確認してください）';});
+    }catch(err){document.getElementById('importStatus').textContent='読み込みに失敗しました';}
+  };
+  reader.readAsText(file);
+});
+/* ---- cause ---- */
+function bar(label,val,max,color){const w=Math.round(val/Math.max(1,max)*100);
+  return `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;"><div style="width:150px;font-size:12px;color:var(--ink-soft);">${esc(label)}</div>
+    <div style="flex:1;background:#F1EDE6;border-radius:6px;height:20px;overflow:hidden;"><div style="width:${w}%;height:100%;background:${color};"></div></div>
+    <div style="width:28px;text-align:right;font-size:13px;font-weight:600;">${val}</div></div>`;}
+function renderAnalysis(){
+  const b={"未達(0件)":0,"1〜半分":0,"半分〜目標未満":0,"達成":0};
+  camp.forEach(s=>{const p=achieved(s);if(s.sold===0)b["未達(0件)"]++;else if(p<50)b["1〜半分"]++;else if(p<100)b["半分〜目標未満"]++;else b["達成"]++;});
+  const mx=Math.max(1,...Object.values(b));const col=['var(--danger)','var(--amber)','var(--teal)','var(--teal-deep)'];
+  document.getElementById('campBars').innerHTML=Object.keys(b).map((k,i)=>bar(k,b[k],mx,col[i])).join('');
+  const names=CAUSES.map(c=>c.v);const cc={};names.forEach(n=>cc[n]=0);camp.forEach(s=>s.causes.forEach(c=>{if(cc[c]!=null)cc[c]++;}));
+  const mc=Math.max(1,...Object.values(cc));document.getElementById('causeBars').innerHTML=names.map(n=>bar(n,cc[n],mc,'var(--teal)')).join('');
+}
+function renderApproach(){document.getElementById('approachCards').innerHTML=CAUSES.map(c=>{const a=APPROACH[c.v];
+  return `<div class="appr-card"><span class="appr-tag">${esc(a.tag)}</span><h3>原因：${esc(c.v)}</h3>
+    <div style="font-size:12px;color:var(--ink-soft);">${esc(a.lead)}</div><ul>${a.points.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+    ${a.quote?`<div class="appr-quote">${esc(a.quote)}</div>`:''}</div>`;}).join('');}
+/* wire */
+document.getElementById('pSearch').addEventListener('input',e=>{pSearch=e.target.value.trim();renderProg();});
+document.getElementById('fSearch').addEventListener('input',e=>{fSearch=e.target.value.trim();renderFollow();});
+
+document.getElementById('cOverlay').onclick=e=>{if(e.target.id==='cOverlay')document.getElementById('cOverlay').classList.remove('open');};
+document.querySelectorAll('.tab').forEach(t=>{t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const v=t.dataset.view;
+  document.getElementById('viewProg').style.display=v==='prog'?'block':'none';
+  document.getElementById('viewFollow').style.display=v==='follow'?'block':'none';
+  document.getElementById('viewAnalysis').style.display=v==='analysis'?'block':'none';if(v==='analysis')renderAnalysis();
+  document.getElementById('viewApproach').style.display=v==='approach'?'block':'none';
+};});
+function pCb(r){pRegion=r;regbar('pRegbar',camp,pRegion,pCb);renderProg();}
+function fCb(r){fRegion=r;regbar('fRegbar',camp,fRegion,fCb);renderFollow();}
+async function init(){
+  try{
+    const rows=await seedIfEmpty();
+    camp=rows.map(rowToStore);
+    document.getElementById('statusFlag').innerHTML='<b>接続中</b> データはデータベースに保存され、みんなで共有されます。';
+    document.getElementById('statusFlag').style.background='var(--teal-tint)';
+    document.getElementById('statusFlag').style.borderColor='#CADDDA';
+    document.getElementById('statusFlag').style.color='var(--teal-deep)';
+  }catch(e){
+    console.error(e);
+    camp=SEED.map(s=>({...s,dbid:null,causes:[],actions:[],status:'pending',memo:''}));
+    document.getElementById('statusFlag').innerHTML='<b>オフライン表示</b> データベースに接続できませんでした。表示のみで、保存されません。';
+  }
+  regbar('pRegbar',camp,pRegion,pCb);regbar('fRegbar',camp,fRegion,fCb);
+  renderProg();renderFollow();renderApproach();
+}
+init();
+</script>
+</body></html>
