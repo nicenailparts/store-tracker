@@ -14,6 +14,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic
 .preview-flag{background:var(--amber-tint);border:1px solid #E7D3A8;color:#8A6221;font-size:12px;padding:9px 13px;border-radius:8px;margin-bottom:18px;line-height:1.6;}
 .title{font-family:'Shippori Mincho',serif;font-weight:700;font-size:23px;margin:0;}
 .subtitle{color:var(--ink-soft);font-size:12.5px;margin:5px 0 0;}
+.last-update{font-size:11.5px;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px;white-space:nowrap;margin-top:2px;}
+.last-update b{color:var(--teal-deep);font-weight:700;}
 .tabs{display:flex;gap:8px;margin:18px 0 18px;overflow-x:auto;padding-bottom:2px;}
 .tab{background:#fff;border:1.5px solid var(--line);border-radius:22px;padding:9px 18px;font-family:inherit;font-size:13.5px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;transition:all .15s;box-shadow:var(--shadow);}
 .tab:hover{border-color:var(--teal);color:var(--teal-deep);}
@@ -112,8 +114,10 @@ textarea{min-height:52px;resize:vertical;}
 <body>
 <div class="wrap">
   <div class="preview-flag" id="statusFlag"><b>読み込み中…</b> データベースに接続しています。</div>
-  <h1 class="title">店舗フォロー管理</h1>
-  <p class="subtitle">N.THREE</p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div><h1 class="title">店舗フォロー管理</h1><p class="subtitle">N.THREE</p></div>
+    <div class="last-update" id="lastUpdate"></div>
+  </div>
   <div class="tabs">
     <button class="tab active" data-view="prog">進捗</button>
     <button class="tab" data-view="follow">フォロー</button>
@@ -152,6 +156,7 @@ textarea{min-height:52px;resize:vertical;}
     <div class="import-note">目標に届いていない店舗（フォロー対象）だけを表示しています。実績が目標に届くと、自動でこのリストから外れます。</div>
     <div class="progress-total" id="followTotal"></div>
     <div class="regbar" id="fRegbar"></div>
+    <div class="filterbar" id="fSoldFilter"></div>
     <input type="text" class="searchbox" id="fSearch" placeholder="店舗名で検索">
     <div class="list-card">
       <div class="list-head sortable" id="fHead" onclick="fSort=nextSort(fSort);renderFollow();">フォロー対象 0 店 ／ 店番号順 ⇅</div>
@@ -227,7 +232,7 @@ function storeNo(name){const m=String(name).match(/(\d+)/);return m?m[1]:'';}
 // DBの行 → アプリ内オブジェクト
 function rowToStore(r){return {dbid:r.id,name:r.name||'',staff:r.staff||0,target:r.target||0,sold:r.sold||0,region:r.region||'',
   causes:r.cause?String(r.cause).split('|').filter(Boolean):[],actions:r.action?String(r.action).split('|').filter(Boolean):[],
-  status:r.status||'pending',memo:r.memo||'',method:r.action_method||'',adate:r.action_date||'',handler:r.handler||''};}
+  status:r.status||'pending',memo:r.memo||'',method:r.action_method||'',adate:r.action_date||'',handler:r.handler||'',updated:r.updated||''};}
 async function loadFromDB(){
   const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=*&order=store_no.asc',{headers:sbHeaders()});
   if(!res.ok)throw new Error('load failed '+res.status);
@@ -274,10 +279,19 @@ async function resetFollow(){
   }catch(e){st.textContent='リセットに失敗しました（通信を確認してください）';}
 }
 
-let pRegion="すべて",pSearch="",fRegion="すべて",fSearch="",pSort="num",fSort="num",cCur=null,tCur=null,imported=false;
+let pRegion="すべて",pSearch="",fRegion="すべて",fSearch="",fSold="all",pSort="num",fSort="num",cCur=null,tCur=null,imported=false;
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function bmeta(st){return {pending:['b-pending','未着手'],progress:['b-progress','フォロー中'],done:['b-done','完了']}[st]||['b-pending','未着手'];}
 function achieved(s){return s.target?Math.round(s.sold/s.target*100):0;}
+function renderLastUpdate(){
+  // 全店のupdatedの最大値を最終更新とする
+  let latest=null;
+  camp.forEach(s=>{if(s.updated){const d=new Date(s.updated);if(!latest||d>latest)latest=d;}});
+  const el=document.getElementById('lastUpdate');
+  if(!el)return;
+  if(latest){el.innerHTML='最終更新：<b>'+(latest.getMonth()+1)+'月'+latest.getDate()+'日</b>';}
+  else{el.textContent='';}
+}
 function isDone(s){return s.target>0&&s.sold>=s.target;}
 function regbar(id,list,active,cb){
   document.getElementById(id).innerHTML=REGIONS.map(r=>{
@@ -329,7 +343,13 @@ function renderFollow(){
   let base=fRegion==="すべて"?camp:camp.filter(s=>s.region===fRegion);
   const todo=base.filter(s=>!isDone(s));
   document.getElementById('followTotal').innerHTML=totalHTML(base,fRegion);
+  // 販売数の絞り込みボタン
+  const defs=[["all","すべて"],["0","0件"],["1","1件"],["2","2件"],["3","3件"],["4+","4件以上"]];
+  const cnt=v=>todo.filter(s=>v==="all"?true:v==="4+"?s.sold>=4:s.sold===parseInt(v)).length;
+  document.getElementById('fSoldFilter').innerHTML=defs.map(d=>`<button class="fbtn ${fSold===d[0]?'active':''}" data-f="${d[0]}">${d[1]} ${cnt(d[0])}</button>`).join('');
+  document.getElementById('fSoldFilter').querySelectorAll('.fbtn').forEach(b=>b.onclick=()=>{fSold=b.dataset.f;renderFollow();});
   let l=todo.slice();
+  if(fSold!=="all")l=l.filter(s=>fSold==="4+"?s.sold>=4:s.sold===parseInt(fSold));
   if(fSearch)l=l.filter(s=>s.name.includes(fSearch));
   l=applySort(l,fSort);
   document.getElementById('fHead').innerHTML=`フォロー対象 <b>${l.length}</b> 店 ／ <span class="sortlink">${SORT_LABEL[fSort]} ⇅</span>`;
@@ -410,8 +430,9 @@ document.getElementById('csvInput').addEventListener('change',e=>{
         map[key]=isNaN(val)?0:val;
       }
       let hit=0;const changed=[];
-      camp.forEach(s=>{const k=normName(s.name);if(k in map){s.sold=map[k];hit++;changed.push(s);}});
-      imported=true;
+      const now=new Date().toISOString();
+      camp.forEach(s=>{const k=normName(s.name);if(k in map){s.sold=map[k];s.updated=now;hit++;changed.push(s);}});
+      imported=true;renderLastUpdate();
       document.getElementById('importStatus').textContent=`取り込み完了：${hit}店の実績を更新しました（保存中…）`;
       renderCamp();renderAnalysis();
       Promise.all(changed.map(s=>saveStore(s))).then(()=>{document.getElementById('importStatus').textContent=`取り込み完了：${hit}店の実績を保存しました`;}).catch(e=>{document.getElementById('importStatus').textContent='保存に失敗しました（通信を確認してください）';});
@@ -464,7 +485,7 @@ async function init(){
     document.getElementById('statusFlag').innerHTML='<b>オフライン表示</b> データベースに接続できませんでした。表示のみで、保存されません。';
   }
   regbar('pRegbar',camp,pRegion,pCb);regbar('fRegbar',camp,fRegion,fCb);
-  renderProg();renderFollow();renderApproach();
+  renderProg();renderFollow();renderApproach();renderLastUpdate();
 }
 init();
 </script>
