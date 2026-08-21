@@ -443,13 +443,14 @@ document.getElementById('csvInput').addEventListener('change',e=>{
     try{
       const text=ev.target.result;
       const lines=text.split(/\r?\n/).filter(l=>l.trim());
-      const header=lines[0].split(',').map(h=>h.replace(/^\ufeff/,'').trim());
+      const header=lines[0].split(',').map(h=>h.replace(/^\ufeff/,'').replace(/^"|"$/g,'').trim());
       const nameIdx=header.findIndex(h=>h==='店舗');
-      const setIdx=header.findIndex(h=>h.includes('セット'));
+      let setIdx=header.findIndex(h=>h.includes('セット'));
+      if(setIdx<0)setIdx=header.findIndex(h=>h.includes('美容液＆化粧水')||h.includes('美容液&化粧水'));
       if(nameIdx<0||setIdx<0){document.getElementById('importStatus').textContent='列が見つかりません（「店舗」「【キャンペーン】セット」を確認）';return;}
       const map={};
       for(let i=1;i<lines.length;i++){
-        const cols=lines[i].split(',');
+        const cols=lines[i].split(',').map(c=>c.replace(/^"|"$/g,'').trim());
         if(cols[nameIdx]==='全店合計'||!cols[nameIdx])continue;
         const key=normName(cols[nameIdx]);
         const val=parseInt(cols[setIdx],10);
