@@ -64,6 +64,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Zen Kaku Gothic
 .empty-msg{padding:30px 16px;text-align:center;color:var(--gray);font-size:13px;}
 .foot-note{font-size:11.5px;color:var(--ink-soft);margin-top:14px;line-height:1.6;}
 .import-note{background:#FBF9F5;border:1px dashed var(--line);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6;}
+.period-note{background:var(--teal-tint);border:1px solid #CADDDA;border-radius:9px;padding:10px 13px;font-size:12px;color:var(--teal-deep);margin-bottom:14px;line-height:1.7;}
 .reset-area{margin-top:30px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#FBF9F5;}
 .reset-title{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;}
 .reset-note{font-size:11px;color:var(--gray);margin-bottom:10px;line-height:1.6;}
@@ -110,6 +111,13 @@ textarea{min-height:52px;resize:vertical;}
 .appr-tag{display:inline-block;font-size:11px;background:var(--amber-tint);color:#8A6221;border-radius:6px;padding:2px 8px;margin-bottom:8px;}
 .appr-card ul{margin:6px 0 0;padding-left:17px;}.appr-card li{font-size:13px;line-height:1.8;}
 .appr-quote{background:#FBF9F5;border-left:3px solid var(--teal);padding:8px 12px;border-radius:0 8px 8px 0;font-size:12.5px;margin:8px 0 0;}
+.dtable{width:100%;border-collapse:collapse;font-size:12.5px;min-width:440px;}
+.dtable th,.dtable td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;}
+.dtable th{background:#FBF9F5;color:var(--teal-deep);font-weight:700;position:sticky;top:0;font-size:11.5px;}
+.dtable td:first-child,.dtable th:first-child{text-align:left;position:sticky;left:0;background:var(--panel);}
+.dtable th:first-child{background:#FBF9F5;}
+.dtable tr.hl td{background:var(--amber-tint);}
+.dtable tr.hl td:first-child{background:var(--amber-tint);}
 </style></head>
 <body>
 <div class="wrap">
@@ -128,6 +136,7 @@ textarea{min-height:52px;resize:vertical;}
   <!-- 進捗タブ：全150店を眺める -->
   <div id="viewProg">
     <div class="import-note">セット販売キャンペーン（8/15〜9/19）。実績は販売データCSV（「【キャンペーン】セット」列）を取り込むと自動で入ります。ここは全店の進捗を見る画面です。</div>
+    <div class="period-note">単品（美容液・化粧水）とセットを同じ期間で比較するため、販売データはキャンペーン期間（8月15日以降）で取り込んでいます。</div>
     <div class="import-row">
       <label class="file-btn">販売データCSVを取り込む<input type="file" id="csvInput" accept=".csv" style="display:none"></label>
       <span class="import-status" id="importStatus">まだ取り込んでいません（実績0）</span>
@@ -154,6 +163,7 @@ textarea{min-height:52px;resize:vertical;}
   <!-- フォロータブ：未達の店だけ -->
   <div id="viewFollow" style="display:none;">
     <div class="import-note">目標に届いていない店舗（フォロー対象）だけを表示しています。実績が目標に届くと、自動でこのリストから外れます。</div>
+    <div class="period-note">単品（美容液・化粧水）とセットを同じ期間で比較するため、販売データはキャンペーン期間（8月15日以降）で取り込んでいます。</div>
     <div class="progress-total" id="followTotal"></div>
     <div class="regbar" id="fRegbar"></div>
     <div class="filterbar" id="fSoldFilter"></div>
@@ -167,7 +177,15 @@ textarea{min-height:52px;resize:vertical;}
 
   <div id="viewAnalysis" style="display:none;">
     <div class="analysis-card"><h2>キャンペーン達成状況</h2><p class="sub">150店の目標に対する達成の分布</p><div id="campBars"></div></div>
-    <div class="analysis-card"><h2>原因の内訳（原因究明）</h2><p class="sub">複数選択のため合計は店舗数と一致しません</p><div id="causeBars"></div></div>
+    <div class="analysis-card"><h2>原因の内訳</h2><p class="sub">複数選択のため合計は店舗数と一致しません</p><div id="causeBars"></div></div>
+    <div class="analysis-card">
+      <h2>店舗別 販売一覧</h2>
+      <p class="sub">美容液・化粧水（単品）とセット（キャンペーン）の販売数。単品が売れてセットが少ない店は、セット割の案内余地があります。<br><b style="color:var(--teal-deep);">「目標」「達成率」はセット（キャンペーン）の目標に対するものです。</b></p>
+      <button class="btn" style="margin-bottom:12px;background:var(--teal-deep);color:#fff;border-color:var(--teal-deep);font-weight:600;" onclick="downloadCSV()">この表をCSVでダウンロード</button>
+      <div style="overflow-x:auto;">
+        <table class="dtable" id="saleTable"></table>
+      </div>
+    </div>
   </div>
 
   <div id="viewApproach" style="display:none;">
@@ -179,12 +197,18 @@ textarea{min-height:52px;resize:vertical;}
 <div class="overlay" id="cOverlay"><div class="modal">
   <div class="modal-head"><h3 class="modal-title" id="cmTitle"></h3><p class="modal-sub" id="cmSub"></p></div>
   <div class="modal-body">
-    <div class="section-label">目標と実績</div>
+    <div class="section-label">キャンペーン（セット）</div>
     <div class="goalbig">
       <div class="gbox"><div class="lab">目標</div><div class="val" id="cmTarget">-</div></div>
       <div class="gbox"><div class="lab">実績</div><div class="val" id="cmSold">0</div></div>
       <div class="gbox"><div class="lab">達成率</div><div class="val" id="cmRate">0%</div></div>
     </div>
+    <div class="section-label">単品の販売（参考）</div>
+    <div class="goalbig">
+      <div class="gbox"><div class="lab">美容液</div><div class="val" id="cmSerum" style="font-size:18px;">0</div></div>
+      <div class="gbox"><div class="lab">化粧水</div><div class="val" id="cmLotion" style="font-size:18px;">0</div></div>
+    </div>
+    <div class="import-note" style="margin:6px 0 0;">単品（美容液・化粧水）が売れていてセットが少ない場合は、セット割の案内ができていない可能性があります。</div>
     <div id="cmFollowArea">
       <div class="section-label">なぜ届いていないか（原因・複数選択できます）</div>
       <div class="field"><div class="opts" id="cmCause"></div>
@@ -232,7 +256,7 @@ function storeNo(name){const m=String(name).match(/(\d+)/);return m?m[1]:'';}
 // DBの行 → アプリ内オブジェクト
 function rowToStore(r){return {dbid:r.id,name:r.name||'',staff:r.staff||0,target:r.target||0,sold:r.sold||0,region:r.region||'',
   causes:r.cause?String(r.cause).split('|').filter(Boolean):[],actions:r.action?String(r.action).split('|').filter(Boolean):[],
-  status:r.status||'pending',memo:r.memo||'',method:r.action_method||'',adate:r.action_date||'',handler:r.handler||'',updated:r.updated||''};}
+  status:r.status||'pending',memo:r.memo||'',method:r.action_method||'',adate:r.action_date||'',handler:r.handler||'',updated:r.updated||'',serum:r.serum||0,lotion:r.lotion||0};}
 async function loadFromDB(){
   const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=*&order=store_no.asc',{headers:sbHeaders()});
   if(!res.ok)throw new Error('load failed '+res.status);
@@ -249,7 +273,7 @@ async function seedIfEmpty(){
 }
 // 1店の変更をDBに保存
 async function saveStore(s){
-  const body={sold:s.sold,cause:s.causes.join('|'),action:s.actions.join('|'),status:s.status,memo:s.memo,action_method:s.method||'',action_date:s.adate||'',handler:s.handler||'',updated:new Date().toISOString()};
+  const body={sold:s.sold,serum:s.serum||0,lotion:s.lotion||0,cause:s.causes.join('|'),action:s.actions.join('|'),status:s.status,memo:s.memo,action_method:s.method||'',action_date:s.adate||'',handler:s.handler||'',updated:new Date().toISOString()};
   await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?id=eq.'+s.dbid,{method:'PATCH',headers:sbHeaders(),body:JSON.stringify(body)});
 }
 // 全店の指定フィールドをDBで一括更新
@@ -392,6 +416,8 @@ function openC(i){cCur=i;const s=camp[i];
   document.getElementById('cmTarget').textContent=s.target+'件';
   document.getElementById('cmSold').textContent=s.sold+'件';
   document.getElementById('cmRate').textContent=achieved(s)+'%';
+  document.getElementById('cmSerum').textContent=(s.serum||0);
+  document.getElementById('cmLotion').textContent=(s.lotion||0);
   // 進捗モードならフォロー入力を隠す
   document.getElementById('cmFollowArea').style.display = cModalMode==='prog' ? 'none' : 'block';
   if(cModalMode!=='prog'){
@@ -452,6 +478,33 @@ function renderAnalysis(){
   document.getElementById('campBars').innerHTML=Object.keys(b).map((k,i)=>bar(k,b[k],mx,col[i])).join('');
   const names=CAUSES.map(c=>c.v);const cc={};names.forEach(n=>cc[n]=0);camp.forEach(s=>s.causes.forEach(c=>{if(cc[c]!=null)cc[c]++;}));
   const mc=Math.max(1,...Object.values(cc));document.getElementById('causeBars').innerHTML=names.map(n=>bar(n,cc[n],mc,'var(--teal)')).join('');
+  renderSaleTable();
+}
+function saleRows(){
+  // 店番号順で全店
+  return camp.slice().sort((a,b)=>storeNum(a)-storeNum(b));
+}
+function renderSaleTable(){
+  const rows=saleRows();
+  let html='<tr><th>店舗</th><th>美容液</th><th>化粧水</th><th>セット</th><th>目標</th><th>達成率</th></tr>';
+  rows.forEach(s=>{
+    const single=(s.serum||0)+(s.lotion||0);
+    // 単品は売れてる(合計3以上)のにセットが0 → ハイライト
+    const hl=(single>=3 && s.sold===0)?' class="hl"':'';
+    html+=`<tr${hl}><td>${esc(s.name)}</td><td>${s.serum||0}</td><td>${s.lotion||0}</td><td>${s.sold}</td><td>${s.target}</td><td>${achieved(s)}%</td></tr>`;
+  });
+  document.getElementById('saleTable').innerHTML=html;
+}
+function downloadCSV(){
+  const rows=saleRows();
+  let csv='店舗,美容液,化粧水,セット,目標,達成率(%)\n';
+  rows.forEach(s=>{csv+=`${s.name},${s.serum||0},${s.lotion||0},${s.sold},${s.target},${achieved(s)}\n`;});
+  const bom='\ufeff';
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const today=new Date();const ymd=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  a.href=url;a.download='販売一覧_'+ymd+'.csv';a.click();URL.revokeObjectURL(url);
 }
 function renderApproach(){document.getElementById('approachCards').innerHTML=CAUSES.map(c=>{const a=APPROACH[c.v];
   return `<div class="appr-card"><span class="appr-tag">${esc(a.tag)}</span><h3>原因：${esc(c.v)}</h3>
@@ -481,7 +534,7 @@ async function init(){
     document.getElementById('statusFlag').style.color='var(--teal-deep)';
   }catch(e){
     console.error(e);
-    camp=SEED.map(s=>({...s,dbid:null,causes:[],actions:[],status:'pending',memo:'',method:'',adate:'',handler:''}));
+    camp=SEED.map(s=>({...s,dbid:null,causes:[],actions:[],status:'pending',memo:'',method:'',adate:'',handler:'',serum:0,lotion:0}));
     document.getElementById('statusFlag').innerHTML='<b>オフライン表示</b> データベースに接続できませんでした。表示のみで、保存されません。';
   }
   regbar('pRegbar',camp,pRegion,pCb);regbar('fRegbar',camp,fRegion,fCb);
