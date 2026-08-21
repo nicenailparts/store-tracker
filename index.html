@@ -477,7 +477,7 @@ document.getElementById('csvInput').addEventListener('change',e=>{
       }
       let hit=0;const changed=[];
       const now=new Date().toISOString();
-      camp.forEach(s=>{const k=normName(s.name);if(k in map){s.sold=map[k];s.updated=now;hit++;changed.push(s);}});
+      camp.forEach(s=>{const k=normName(s.name);if(k in map){s.sold=map[k].set;s.serum=map[k].serum;s.lotion=map[k].lotion;s.updated=now;hit++;changed.push(s);}});
       imported=true;renderLastUpdate();
       document.getElementById('importStatus').textContent=`取り込み完了：${hit}店の実績を更新しました（保存中…）`;
       renderCamp();renderAnalysis();
