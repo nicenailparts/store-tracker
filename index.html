@@ -467,13 +467,17 @@ document.getElementById('csvInput').addEventListener('change',e=>{
       let setIdx=header.findIndex(h=>h.includes('セット'));
       if(setIdx<0)setIdx=header.findIndex(h=>h.includes('美容液＆化粧水')||h.includes('美容液&化粧水'));
       if(nameIdx<0||setIdx<0){document.getElementById('importStatus').textContent='列が見つかりません（「店舗」「【キャンペーン】セット」を確認）';return;}
+      const serumInit=header.findIndex(h=>h==='セラム初回');
+      const serumRe=header.findIndex(h=>h==='セラム再購入');
+      const lotionInit=header.findIndex(h=>h==='化粧水初回');
+      const lotionRe=header.findIndex(h=>h==='化粧水再購入');
+      const gv=(cols,idx)=>{if(idx<0)return 0;const v=parseInt(cols[idx],10);return isNaN(v)?0:v;};
       const map={};
       for(let i=1;i<lines.length;i++){
         const cols=parseCsvLine(lines[i]);
         if(cols[nameIdx]==='全店合計'||!cols[nameIdx])continue;
         const key=normName(cols[nameIdx]);
-        const val=parseInt(cols[setIdx],10);
-        map[key]=isNaN(val)?0:val;
+        map[key]={set:gv(cols,setIdx),serum:gv(cols,serumInit)+gv(cols,serumRe),lotion:gv(cols,lotionInit)+gv(cols,lotionRe)};
       }
       let hit=0;const changed=[];
       const now=new Date().toISOString();
